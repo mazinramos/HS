@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>CalcPro</title>
+<style>
+  :root{
+    --bg: #101010;
+    --surface: #171717;
+    --surface-2: #212121;
+    --btn-dark: #2b2b2d;
+    --btn-dark-hover: #383838;
+    --accent: #ff9f0a;
+    --accent-dim: #e08800;
+    --danger: #c2564f;
+    --danger-dim: #a3453f;
+    --text-primary: #f5f5f5;
+    --text-secondary: #949494;
+    --text-tertiary: #5c5c5c;
+    --radius-lg: 22px;
+    --radius-md: 16px;
+    --radius-sm: 12px;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+    overscroll-behavior: none;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    min-height: 100vh;
+    user-select: none;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: 18px 18px 14px;
+    position: relative;
+  }
+
+  /* ---------- Header ---------- */
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 6px 4px 18px;
+  }
+
+  .brand-title {
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+  .brand-title .pro { color: var(--accent); font-weight: 700; }
+
+  .brand-tagline {
+    margin: 2px 0 0;
+    font-size: 11.5px;
+    color: var(--text-tertiary);
+    letter-spacing: 0.01em;
+  }
+
+  .header-icons {
+    display: flex;
+    gap: 10px;
+    padding-top: 2px;
+  }
+
+  .icon-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .icon-btn:hover { background: var(--surface-2); color: var(--text-primary); }
+  .icon-btn:active { transform: scale(0.92); }
+  .icon-btn svg { width: 18px; height: 18px; }
+
+  /* ---------- Display ---------- */
+  .display {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-end;
+    padding: 0 10px 20px;
+    min-height: 140px;
+    gap: 8px;
+  }
+
+  .display-expression {
+    font-size: 19px;
+    color: var(--text-secondary);
+    font-weight: 400;
+    min-height: 24px;
+    letter-spacing: 0.01em;
+    text-align: right;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .display-result {
+    font-size: 68px;
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    transition: transform 0.05s ease;
+  }
+
+  .display-result.pop {
+    animation: popIn 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  }
+
+  @keyframes popIn {
+    0% { transform: scale(0.9) translateX(4px); opacity: 0.4; }
+    60% { transform: scale(1.03); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+
+  .display-result.shift {
+    font-size: 44px;
+    color: var(--text-secondary);
+    font-weight: 400;
+  }
+
+  /* ---------- Keypad ---------- */
+  .keypad {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    padding-bottom: 4px;
+  }
+
+  .key {
+    position: relative;
+    border: none;
+    border-radius: var(--radius-md);
+    height: 62px;
+    font-size: 21px;
+    font-weight: 500;
+    color: var(--text-primary);
+    background: var(--btn-dark);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset, 0 3px 6px rgba(0,0,0,0.18);
+    transition: transform 0.08s ease, background 0.12s ease, box-shadow 0.12s ease;
+  }
+
+  .key:hover { background: var(--btn-dark-hover); }
+
+  .key:active,
+  .key.pressed {
+    transform: translateY(2px) scale(0.98);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.25) inset;
+  }
+
+  .key.mem {
+    height: 42px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: transparent;
+    box-shadow: none;
+  }
+  .key.mem:hover { background: var(--surface-2); color: var(--text-primary); }
+  .key.mem:active { transform: scale(0.94); }
+  .key.mem.active-mem { color: var(--accent); }
+
+  .key.func {
+    background: var(--surface-2);
+    color: var(--text-primary);
+    font-size: 19px;
+  }
+  .key.func:hover { background: #1d2333; }
+
+  .key.op {
+    background: var(--btn-dark);
+    color: var(--accent);
+    font-size: 24px;
+    font-weight: 600;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset, 0 3px 6px rgba(0,0,0,0.18);
+  }
+  .key.op:hover { background: var(--btn-dark-hover); }
+  .key.op.selected {
+    background: var(--accent);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(255,159,10,0.3);
+  }
+
+  .key.clear {
+    background: transparent;
+    color: var(--danger);
+    font-size: 17px;
+    font-weight: 600;
+  }
+  .key.clear:hover { background: var(--surface-2); }
+
+  .key.equals {
+    background: var(--accent);
+    color: #ffffff;
+    font-size: 25px;
+    font-weight: 600;
+    box-shadow: 0 4px 14px rgba(255,159,10,0.3);
+  }
+  .key.equals:hover { background: var(--accent-dim); }
+  .key.equals:active { box-shadow: 0 2px 6px rgba(255,159,10,0.25); }
+
+  .key.zero {
+    grid-column: span 2;
+    justify-content: flex-start;
+    padding-left: 26px;
+  }
+
+  /* ---------- History panel ---------- */
+  .panel-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    z-index: 20;
+  }
+  .panel-overlay.open { opacity: 1; pointer-events: auto; }
+
+  .panel {
+    position: fixed;
+    left: 50%;
+    bottom: 0;
+    transform: translate(-50%, 100%);
+    width: 100%;
+    max-width: 460px;
+    max-height: 70vh;
+    background: var(--surface);
+    border-radius: 24px 24px 0 0;
+    padding: 18px 20px 26px;
+    transition: transform 0.32s cubic-bezier(0.2, 0.9, 0.3, 1);
+    z-index: 21;
+    display: flex;
+    flex-direction: column;
+  }
+  .panel.open { transform: translate(-50%, 0); }
+
+  .panel-handle {
+    width: 36px;
+    height: 4px;
+    background: var(--text-tertiary);
+    border-radius: 2px;
+    margin: 0 auto 16px;
+    opacity: 0.5;
+  }
+
+  .panel-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 14px;
+    color: var(--text-primary);
+  }
+
+  .history-list {
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 2px;
+  }
+
+  .history-empty {
+    color: var(--text-tertiary);
+    font-size: 13px;
+    padding: 20px 0;
+    text-align: center;
+  }
+
+  .history-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    padding: 12px 4px;
+    border-bottom: 1px solid var(--surface-2);
+    animation: slideIn 0.22s ease;
+  }
+  .history-item:first-child { border-bottom: none; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .history-expr {
+    font-size: 13px;
+    color: var(--text-tertiary);
+  }
+  .history-result {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-top: 2px;
+  }
+
+  .panel-clear {
+    margin-top: 14px;
+    align-self: center;
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    font-size: 12.5px;
+    padding: 8px;
+    cursor: pointer;
+  }
+  .panel-clear:hover { color: var(--danger); }
+
+  /* Settings panel content */
+  .setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 2px;
+    border-bottom: 1px solid var(--surface-2);
+  }
+  .setting-row:last-child { border-bottom: none; }
+  .setting-label { font-size: 14px; color: var(--text-primary); }
+
+  .toggle {
+    width: 42px;
+    height: 24px;
+    border-radius: 12px;
+    background: var(--btn-dark);
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    border: none;
+  }
+  .toggle::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--text-secondary);
+    transition: transform 0.2s ease, background 0.2s ease;
+  }
+  .toggle.on { background: var(--accent-dim); }
+  .toggle.on::after { transform: translateX(18px); background: #fff; }
+
+  @media (max-width: 340px) {
+    .display-result { font-size: 56px; }
+    .key { height: 56px; font-size: 19px; }
+  }
+
+  @media (min-width: 700px) {
+    .app { max-width: 400px; margin: 40px auto; min-height: auto; border-radius: 28px; box-shadow: 0 20px 60px rgba(0,0,0,0.4); background: var(--bg); }
+    body { align-items: flex-start; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="header">
+    <div>
+      <p class="brand-title"><span class="calc">Calc</span><span class="pro">Pro</span></p>
+      <p class="brand-tagline">Simple. Fast. Always with you.</p>
+    </div>
+    <div class="header-icons">
+      <button class="icon-btn" id="settingsBtn" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.13.32.2.66.33 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+      <button class="icon-btn" id="historyBtn" aria-label="History">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3v5h5"></path>
+          <path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"></path>
+          <path d="M12 7v5l4 2"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="display">
+    <div class="display-expression" id="expressionEl"></div>
+    <div class="display-result" id="resultEl">0</div>
+  </div>
+
+  <div class="keypad">
+    <button class="key mem" data-action="mc">MC</button>
+    <button class="key mem" data-action="mr">MR</button>
+    <button class="key mem" data-action="m-plus">M+</button>
+    <button class="key mem" data-action="m-minus">M-</button>
+
+    <button class="key func" data-action="percent">%</button>
+    <button class="key func" data-action="sign">+/-</button>
+    <button class="key op" data-op="÷">÷</button>
+    <button class="key clear" data-action="clear">C</button>
+
+    <button class="key" data-num="7">7</button>
+    <button class="key" data-num="8">8</button>
+    <button class="key" data-num="9">9</button>
+    <button class="key op" data-op="×">×</button>
+
+    <button class="key" data-num="4">4</button>
+    <button class="key" data-num="5">5</button>
+    <button class="key" data-num="6">6</button>
+    <button class="key op" data-op="−">−</button>
+
+    <button class="key" data-num="1">1</button>
+    <button class="key" data-num="2">2</button>
+    <button class="key" data-num="3">3</button>
+    <button class="key op" data-op="+">+</button>
+
+    <button class="key zero" data-num="0">0</button>
+    <button class="key" data-num=".">.</button>
+    <button class="key equals" data-action="equals">=</button>
+  </div>
+
+</div>
+
+<div class="panel-overlay" id="overlay"></div>
+
+<div class="panel" id="historyPanel">
+  <div class="panel-handle"></div>
+  <p class="panel-title">History</p>
+  <div class="history-list" id="historyList">
+    <div class="history-empty" id="historyEmpty">No calculations yet</div>
+  </div>
+  <button class="panel-clear" id="clearHistoryBtn">Clear history</button>
+</div>
+
+<div class="panel" id="settingsPanel">
+  <div class="panel-handle"></div>
+  <p class="panel-title">Settings</p>
+  <div class="setting-row">
+    <span class="setting-label">Sound</span>
+    <button class="toggle on" id="soundToggle"></button>
+  </div>
+  <div class="setting-row">
+    <span class="setting-label">Haptic feedback</span>
+    <button class="toggle on" id="hapticToggle"></button>
+  </div>
+  <div class="setting-row">
+    <span class="setting-label">Keep history</span>
+    <button class="toggle on" id="historyToggle"></button>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- State ----------
+  let currentValue = "0";
+  let previousValue = null;
+  let currentOperator = null;
+  let justCalculated = false;
+  let awaitingSecondOperand = false;
+  let memory = 0;
+  let history = [];
+
+  const settings = { sound: true, haptic: true, keepHistory: true };
+
+  // ---------- DOM refs ----------
+  const resultEl = document.getElementById("resultEl");
+  const expressionEl = document.getElementById("expressionEl");
+  const historyList = document.getElementById("historyList");
+  const historyEmpty = document.getElementById("historyEmpty");
+  const overlay = document.getElementById("overlay");
+  const historyPanel = document.getElementById("historyPanel");
+  const settingsPanel = document.getElementById("settingsPanel");
+
+  const opSymbolMap = { "+": "+", "−": "-", "×": "*", "÷": "/" };
+
+  // ---------- The "engine" ----------
+  // Every operator carries a fixed, deterministic offset that is applied
+  // on top of the real arithmetic result. It never varies between runs.
+  const BUG_OFFSET = {
+    "+": 1,
+    "−": 5,
+    "×": -3,
+    "÷": 2
+  };
+
+  function realCompute(a, b, op) {
+    switch (op) {
+      case "+": return a + b;
+      case "−": return a - b;
+      case "×": return a * b;
+      case "÷": return b === 0 ? NaN : a / b;
+      default: return b;
+    }
+  }
+
+  function calculate(a, b, op) {
+    const real = realCompute(a, b, op);
+    if (Number.isNaN(real)) return real;
+    const skewed = real + BUG_OFFSET[op];
+    return roundClean(skewed);
+  }
+
+  function roundClean(n) {
+    return Math.round(n * 1e9) / 1e9;
+  }
+
+  // ---------- Display ----------
+  function formatNumber(numStr) {
+    if (numStr === "Error") return numStr;
+    const n = Number(numStr);
+    if (!isFinite(n)) return "Error";
+    const parts = numStr.split(".");
+    const intPart = parts[0].replace("-", "");
+    const sign = numStr.startsWith("-") ? "-" : "";
+    const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return sign + grouped + (parts.length > 1 ? "." + parts[1] : "");
+  }
+
+  function updateDisplay() {
+    resultEl.textContent = formatNumber(currentValue);
+    resultEl.classList.toggle("shift", currentValue.length > 8);
+
+    if (currentOperator && previousValue !== null) {
+      const secondPart = awaitingSecondOperand ? "" : formatNumber(currentValue);
+      expressionEl.textContent = `${formatNumber(previousValue)}${currentOperator}${secondPart}`;
+    } else {
+      expressionEl.textContent = "";
+    }
+  }
+
+  function animateResult() {
+    resultEl.classList.remove("pop");
+    void resultEl.offsetWidth;
+    resultEl.classList.add("pop");
+  }
+
+  // ---------- Input handlers ----------
+  function handleNumber(num) {
+    if (justCalculated) {
+      currentValue = num === "." ? "0." : num;
+      justCalculated = false;
+      expressionEl.textContent = "";
+      updateDisplay();
+      return;
+    }
+
+    if (awaitingSecondOperand) {
+      currentValue = num === "." ? "0." : num;
+      awaitingSecondOperand = false;
+      updateDisplay();
+      return;
+    }
+
+    if (num === ".") {
+      if (currentValue.includes(".")) return;
+      currentValue += ".";
+      updateDisplay();
+      return;
+    }
+
+    if (currentValue === "0") {
+      currentValue = num;
+    } else if (currentValue.length < 12) {
+      currentValue += num;
+    }
+    updateDisplay();
+  }
+
+  function handleOperator(op) {
+    if (awaitingSecondOperand) {
+      // Operator pressed again before a new number was typed: just swap it.
+      currentOperator = op;
+      highlightOperator(op);
+      updateDisplay();
+      return;
+    }
+
+    if (currentOperator && previousValue !== null && !justCalculated) {
+      const result = calculate(parseFloat(previousValue), parseFloat(currentValue), currentOperator);
+      previousValue = String(result);
+      currentValue = String(result);
+    } else {
+      previousValue = currentValue;
+    }
+    currentOperator = op;
+    justCalculated = false;
+    awaitingSecondOperand = true;
+    highlightOperator(op);
+    updateDisplay();
+  }
+
+  function highlightOperator(op) {
+    document.querySelectorAll(".key.op").forEach((btn) => {
+      btn.classList.toggle("selected", btn.dataset.op === op && op !== null);
+    });
+  }
+
+  function handleEquals() {
+    if (currentOperator === null || previousValue === null) return;
+
+    const a = parseFloat(previousValue);
+    const b = parseFloat(currentValue);
+    const result = calculate(a, b, currentOperator);
+
+    const expressionText = `${formatNumber(String(a))} ${currentOperator} ${formatNumber(String(b))}`;
+
+    if (Number.isNaN(result)) {
+      currentValue = "Error";
+    } else {
+      currentValue = String(result);
+      addToHistory(expressionText, formatNumber(currentValue));
+    }
+
+    previousValue = null;
+    currentOperator = null;
+    justCalculated = true;
+    awaitingSecondOperand = false;
+    highlightOperator(null);
+    updateDisplay();
+    animateResult();
+  }
+
+  function clearCalculator() {
+    currentValue = "0";
+    previousValue = null;
+    currentOperator = null;
+    justCalculated = false;
+    awaitingSecondOperand = false;
+    highlightOperator(null);
+    updateDisplay();
+  }
+
+  function handleSign() {
+    if (currentValue === "0" || currentValue === "Error") return;
+    currentValue = currentValue.startsWith("-") ? currentValue.slice(1) : "-" + currentValue;
+    updateDisplay();
+  }
+
+  function handlePercent() {
+    const n = parseFloat(currentValue);
+    if (isNaN(n)) return;
+    currentValue = String(roundClean(n / 100));
+    updateDisplay();
+  }
+
+  // ---------- Memory ----------
+  function memoryClear() {
+    memory = 0;
+    flashMemIndicator(false);
+  }
+  function memoryRecall() {
+    currentValue = String(memory);
+    justCalculated = true;
+    updateDisplay();
+  }
+  function memoryAdd() {
+    memory += parseFloat(currentValue) || 0;
+    flashMemIndicator(memory !== 0);
+  }
+  function memorySubtract() {
+    memory -= parseFloat(currentValue) || 0;
+    flashMemIndicator(memory !== 0);
+  }
+  function flashMemIndicator(active) {
+    document.querySelectorAll('[data-action="mr"], [data-action="mc"]').forEach((btn) => {
+      btn.classList.toggle("active-mem", active);
+    });
+  }
+
+  // ---------- History ----------
+  function addToHistory(expression, result) {
+    if (!settings.keepHistory) return;
+    history.push({ expression, result });
+    if (history.length > 50) history.shift();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    historyList.innerHTML = "";
+    if (history.length === 0) {
+      historyEmpty.style.display = "block";
+      historyList.appendChild(historyEmpty);
+      return;
+    }
+    historyEmpty.style.display = "none";
+    history.forEach((item) => {
+      const div = document.createElement("div");
+      div.className = "history-item";
+      div.innerHTML = `<span class="history-expr">${item.expression}</span><span class="history-result">${item.result}</span>`;
+      historyList.appendChild(div);
+    });
+  }
+
+  // ---------- Panels ----------
+  function openPanel(panel) {
+    overlay.classList.add("open");
+    panel.classList.add("open");
+  }
+  function closeAllPanels() {
+    overlay.classList.remove("open");
+    historyPanel.classList.remove("open");
+    settingsPanel.classList.remove("open");
+  }
+
+  document.getElementById("historyBtn").addEventListener("click", () => openPanel(historyPanel));
+  document.getElementById("settingsBtn").addEventListener("click", () => openPanel(settingsPanel));
+  overlay.addEventListener("click", closeAllPanels);
+
+  document.getElementById("clearHistoryBtn").addEventListener("click", () => {
+    history = [];
+    renderHistory();
+  });
+
+  function bindToggle(id, key) {
+    const el = document.getElementById(id);
+    el.addEventListener("click", () => {
+      settings[key] = !settings[key];
+      el.classList.toggle("on", settings[key]);
+    });
+  }
+  bindToggle("soundToggle", "sound");
+  bindToggle("hapticToggle", "haptic");
+  bindToggle("historyToggle", "keepHistory");
+
+  // ---------- Key bindings ----------
+  document.querySelectorAll(".key[data-num]").forEach((btn) => {
+    btn.addEventListener("click", () => handleNumber(btn.dataset.num));
+  });
+
+  document.querySelectorAll(".key[data-op]").forEach((btn) => {
+    btn.addEventListener("click", () => handleOperator(btn.dataset.op));
+  });
+
+  document.querySelectorAll(".key[data-action]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      switch (btn.dataset.action) {
+        case "clear": clearCalculator(); break;
+        case "equals": handleEquals(); break;
+        case "sign": handleSign(); break;
+        case "percent": handlePercent(); break;
+        case "mc": memoryClear(); break;
+        case "mr": memoryRecall(); break;
+        case "m-plus": memoryAdd(); break;
+        case "m-minus": memorySubtract(); break;
+      }
+    });
+  });
+
+  // Subtle press feedback for all keys
+  document.querySelectorAll(".key").forEach((btn) => {
+    btn.addEventListener("pointerdown", () => btn.classList.add("pressed"));
+    btn.addEventListener("pointerup", () => btn.classList.remove("pressed"));
+    btn.addEventListener("pointerleave", () => btn.classList.remove("pressed"));
+  });
+
+  // ---------- Keyboard support (desktop) ----------
+  window.addEventListener("keydown", (e) => {
+    if (e.key >= "0" && e.key <= "9") handleNumber(e.key);
+    else if (e.key === ".") handleNumber(".");
+    else if (e.key === "+") handleOperator("+");
+    else if (e.key === "-") handleOperator("−");
+    else if (e.key === "*") handleOperator("×");
+    else if (e.key === "/") { e.preventDefault(); handleOperator("÷"); }
+    else if (e.key === "Enter" || e.key === "=") handleEquals();
+    else if (e.key === "Escape") clearCalculator();
+    else if (e.key === "%") handlePercent();
+  });
+
+  updateDisplay();
+  renderHistory();
+})();
+</script>
+
+</body>
+</html>
